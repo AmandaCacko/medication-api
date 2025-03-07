@@ -1,46 +1,62 @@
 import fs from "fs";
 import path from "path";
-import csvParser from "csv-parser";
+import iconv from "iconv-lite";
 import { Medicine } from "../models/medicine.model";
 
 const CSV_FILE_PATH = path.resolve(__dirname, "../../data/DADOS_ABERTOS_MEDICAMENTOS.csv");
 
 export const loadMedicines = async (): Promise<Medicine[]> => {
   return new Promise((resolve, reject) => {
-    const medicines: Medicine[] = [];
-
     if (!fs.existsSync(CSV_FILE_PATH)) {
       return reject(new Error("CSV file not found"));
     }
 
-    fs.createReadStream(CSV_FILE_PATH, { encoding: "utf8" })
-      .pipe(csvParser({
-        separator: ";",
-        quote: '"',
-        headers: [
-          "TIPO_PRODUTO", "NOME_PRODUTO", "DATA_FINALIZACAO_PROCESSO", 
-          "CATEGORIA_REGULATORIA", "NUMERO_REGISTRO_PRODUTO", 
-          "DATA_VENCIMENTO_REGISTRO", "NUMERO_PROCESSO", "CLASSE_TERAPEUTICA", 
-          "EMPRESA_DETENTORA_REGISTRO", "SITUACAO_REGISTRO", "PRINCIPIO_ATIVO"
-        ]
-      }))
-      .on("data", (data) => {
-        const medicine: Medicine = {
-          PRODUCT_TYPE: (data["TIPO_PRODUTO"] || "").trim(),
-          PRODUCT_NAME: (data["NOME_PRODUTO"] || "").trim(),
-          PROCESS_FINALIZATION_DATE: (data["DATA_FINALIZACAO_PROCESSO"] || "").trim(),
-          REGULATORY_CATEGORY: (data["CATEGORIA_REGULATORIA"] || "").trim(),
-          PRODUCT_REGISTRATION_NUMBER: (data["NUMERO_REGISTRO_PRODUTO"] || "").trim(),
-          REGISTRATION_EXPIRATION_DATE: (data["DATA_VENCIMENTO_REGISTRO"] || "").trim(),
-          PROCESS_NUMBER: (data["NUMERO_PROCESSO"] || "").trim(),
-          THERAPEUTIC_CLASS: (data["CLASSE_TERAPEUTICA"] || "").trim(),
-          REGISTRATION_HOLDER_COMPANY: (data["EMPRESA_DETENTORA_REGISTRO"] || "").trim(),
-          REGISTRATION_STATUS: (data["SITUACAO_REGISTRO"] || "").trim(),
-          ACTIVE_INGREDIENT: (data["PRINCIPIO_ATIVO"] || "").trim(),
-        };
-        medicines.push(medicine);
-      })
-      .on("end", () => resolve(medicines))
-      .on("error", (error) => reject(error));  
+    fs.readFile(CSV_FILE_PATH, (err, buffer) => {
+      if (err) return reject(err);
+
+      let data = iconv.decode(buffer, "windows-1252");
+
+      const cleanText = (text: string) =>
+        text
+          .normalize("NFD") 
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^\x20-\x7E]/g, "")
+          .trim(); 
+
+      data = data.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
+      const entries = data.split('\n"MEDICAMENTO"').map((entry, index) =>
+        index === 0 ? entry : `"MEDICAMENTO"${entry}`
+      );
+
+      const medicines: Medicine[] = [];
+
+      for (const entry of entries) {
+        const columns = entry.split(";").map(col =>
+          cleanText(col.replace(/^"|"$/g, ""))
+        );
+
+        if (columns.length >= 11) {
+          const medicine: Medicine = {
+            PRODUCT_TYPE: columns[0] || "",
+            PRODUCT_NAME: columns[1] || "",
+            PROCESS_FINALIZATION_DATE: columns[2] || "",
+            REGULATORY_CATEGORY: columns[3] || "",
+            PRODUCT_REGISTRATION_NUMBER: columns[4] || "",
+            REGISTRATION_EXPIRATION_DATE: columns[5] || "",
+            PROCESS_NUMBER: columns[6] || "",
+            THERAPEUTIC_CLASS: columns[7] || "",
+            REGISTRATION_HOLDER_COMPANY: columns[8] || "",
+            REGISTRATION_STATUS: columns[9] || "",
+            ACTIVE_INGREDIENT: columns[10] || "",
+          };
+
+          medicines.push(medicine);
+        }
+      }
+
+      console.log("Medicines loaded:", medicines);
+      resolve(medicines);
+    });
   });
 };

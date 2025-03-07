@@ -30,6 +30,11 @@ router.get("/listAll", listMedicines);
  *       200:
  *         description: Lista de medicamentos encontrados.
  */
-router.get("/search", async (req: Request, res: Response) => await listMedicines(req, res));
+router.get("/search", (req: Request, res: Response) => {
+    searchMedicine(req, res).catch(error => {
+        console.error("Erro ao buscar medicamento:", error);
+        res.status(500).json({ error: "Erro interno do servidor" });
+    });
+});
 
 export default router;

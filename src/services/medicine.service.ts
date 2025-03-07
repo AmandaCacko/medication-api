@@ -3,17 +3,22 @@ import { Medicine } from "../models/medicine.model";
 
 let cachedMedicines: Medicine[] = [];
 
-export const getAllMedicines = async (): Promise<Medicine[]> => {
+const ensureMedicinesLoaded = async () => {
   if (cachedMedicines.length === 0) {
     cachedMedicines = await loadMedicines();
   }
+};
+
+export const getAllMedicines = async (): Promise<Medicine[]> => {
+  await ensureMedicinesLoaded();
   return cachedMedicines;
 };
 
 export const getMedicineByName = async (name: string): Promise<Medicine[]> => {
-  const medicines = cachedMedicines.length > 0 ? cachedMedicines : await loadMedicines();
-  const regex = new RegExp(name, 'i');
-  return medicines.filter(med =>
-    regex.test(med.PRODUCT_NAME)
-  );
+  await ensureMedicinesLoaded();
+  
+  const trimmedName = name.trim();
+  const regex = new RegExp(trimmedName, 'i');
+  
+  return cachedMedicines.filter(med => regex.test(med.PRODUCT_NAME.trim()));
 };
