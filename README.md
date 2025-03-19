@@ -8,8 +8,6 @@ A **Medication API** é uma API construída para fornecer dados sobre medicament
 - **TypeScript**: Superset do JavaScript com tipagem estática.
 - **Express**: Framework para construção de APIs em Node.js.
 - **CSV-Loader**: Para carregar dados a partir de arquivos CSV.
-- **TypeORM**: (Se estiver usando um banco de dados relacional no futuro) para gerenciar entidades e consultas.
-- **Jest**: Para testes (caso você queira adicionar testes no futuro).
 
 ## 🛠 Funcionalidades
 
