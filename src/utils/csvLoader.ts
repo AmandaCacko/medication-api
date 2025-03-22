@@ -14,13 +14,10 @@ export const loadMedicines = async (): Promise<Medicine[]> => {
     fs.readFile(CSV_FILE_PATH, (err, buffer) => {
       if (err) return reject(err);
 
-      let data = iconv.decode(buffer, "windows-1252");
+      let data = iconv.decode(buffer, "ISO-8859-1");
 
       const cleanText = (text: string) =>
         text
-          .normalize("NFD") 
-          .replace(/[\u0300-\u036f]/g, "")
-          .replace(/[^\x20-\x7E]/g, "")
           .trim(); 
 
       data = data.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
