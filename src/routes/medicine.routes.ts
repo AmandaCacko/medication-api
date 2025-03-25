@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { listMedicines, searchMedicine, listMedicinesNames} from "../controllers/medicine.controller";
+import { listMedicines, searchMedicine, listMedicinesNames, listEnumValues} from "../controllers/medicine.controller";
 
 const router = express.Router();
 
@@ -76,5 +76,34 @@ router.get("/searchRegistry", (req: Request, res: Response) => {
         res.status(500).json({ error: "Erro interno do servidor" });
     });
 });
+
+/**
+ * @swagger
+ * /enums:
+ *   get:
+ *     summary: Retorna os valores dos enums utilizados no sistema
+ *     description: Retorna os valores possíveis dos enums REGULATORY_CATEGORY e REGISTRATION_STATUS.
+ *     tags:
+ *       - Enums
+ *     responses:
+ *       200:
+ *         description: Lista dos valores dos enums disponíveis
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 REGULATORY_CATEGORY:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["CONTROLADO", "SIMILAR", "GENÉRICO"]
+ *                 REGISTRATION_STATUS:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["ATIVO", "INATIVO", "SUSPENSO"]
+ */
+router.get("/enums", listEnumValues);
 
 export default router;

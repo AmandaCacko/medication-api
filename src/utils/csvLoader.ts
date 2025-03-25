@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import iconv from "iconv-lite";
 import { Medicine } from "../models/medicine.model";
+import { REGULATORY_CATEGORY, REGISTRATION_STATUS } from "../models/enums";
 
 const CSV_FILE_PATH = path.resolve(__dirname, "../../data/DADOS_ABERTOS_MEDICAMENTOS.csv");
 
@@ -38,13 +39,17 @@ export const loadMedicines = async (): Promise<Medicine[]> => {
             PRODUCT_TYPE: columns[0] || "",
             PRODUCT_NAME: columns[1] || "",
             PROCESS_FINALIZATION_DATE: columns[2] || "",
-            REGULATORY_CATEGORY: columns[3] || "",
+            REGULATORY_CATEGORY: (Object.values(REGULATORY_CATEGORY) as string[]).includes(columns[3]) 
+              ? (columns[3] as REGULATORY_CATEGORY) 
+              : REGULATORY_CATEGORY.OUTRO,
             PRODUCT_REGISTRATION_NUMBER: columns[4] || "",
             REGISTRATION_EXPIRATION_DATE: columns[5] || "",
             PROCESS_NUMBER: columns[6] || "",
             THERAPEUTIC_CLASS: columns[7] || "",
             REGISTRATION_HOLDER_COMPANY: columns[8] || "",
-            REGISTRATION_STATUS: columns[9] || "",
+            REGISTRATION_STATUS: (Object.values(REGISTRATION_STATUS) as string[]).includes(columns[9]) 
+              ? (columns[9] as REGISTRATION_STATUS) 
+              : REGISTRATION_STATUS.DESCONHECIDO,
             ACTIVE_INGREDIENT: columns[10] || "",
           };
 

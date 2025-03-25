@@ -1,11 +1,21 @@
 import { loadMedicines } from "../utils/csvLoader";
 import { Medicine } from "../models/medicine.model";
+import { REGULATORY_CATEGORY, REGISTRATION_STATUS } from "../models/enums";
 
 let cachedMedicines: Medicine[] = [];
 
+const mapToEnum = <T extends Record<string, string | number>>(value: string, enumType: T): T[keyof T] | undefined => {
+  return Object.values(enumType).includes(value) ? (value as T[keyof T]) : undefined;
+};
+
+
 const ensureMedicinesLoaded = async () => {
   if (cachedMedicines.length === 0) {
-    cachedMedicines = await loadMedicines();
+    cachedMedicines = (await loadMedicines()).map(medicine => ({
+      ...medicine,
+      REGULATORY_CATEGORY: mapToEnum(medicine.REGULATORY_CATEGORY, REGULATORY_CATEGORY) || medicine.REGULATORY_CATEGORY,
+      REGISTRATION_STATUS: mapToEnum(medicine.REGISTRATION_STATUS, REGISTRATION_STATUS) || medicine.REGISTRATION_STATUS
+    }));
   }
 };
 

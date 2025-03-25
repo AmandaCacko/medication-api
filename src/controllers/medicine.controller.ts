@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { getMedicineByName, getAllMedicines, getAllMedicinesNames, getMedicineByRegistryNumber } from "../services/medicine.service";
+import { REGULATORY_CATEGORY, REGISTRATION_STATUS } from "../models/enums";
 
 export async function listMedicines(req: Request, res: Response) {
     try {
@@ -13,7 +14,7 @@ export async function listMedicines(req: Request, res: Response) {
 
 export async function searchMedicine(req: Request, res: Response) {
     try {
-        const { name, registryNumber } = req.query;
+        const { name, registryNumber, category } = req.query;
 
         if (registryNumber) {
             const result = await getMedicineByRegistryNumber(registryNumber as string);
@@ -28,6 +29,15 @@ export async function searchMedicine(req: Request, res: Response) {
             if (result.length === 0) {
                 return res.status(404).json({ message: "Nenhum medicamento encontrado com o nome fornecido." });
             }
+            return res.json(result);
+        }
+
+        if (category) {
+            const validCategory = Object.values(REGULATORY_CATEGORY).includes(category as any);
+            if (!validCategory) {
+                return res.status(400).json({ message: "Categoria regulatória inválida." });
+            }
+            const result = (await getAllMedicines()).filter(med => med.REGULATORY_CATEGORY === category);
             return res.json(result);
         }
 
@@ -48,5 +58,12 @@ export async function listMedicinesNames(req: Request, res: Response) {
         console.error("Error loading medicine names:", error);
         res.status(500).json({ message: "Error loading medicine names", error: error.message || error });
     }
+}
+
+export function listEnumValues(req: Request, res: Response) {
+    res.json({
+        REGULATORY_CATEGORY: Object.values(REGULATORY_CATEGORY),
+        REGISTRATION_STATUS: Object.values(REGISTRATION_STATUS),
+    });
 }
 
