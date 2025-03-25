@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getMedicineByName, getAllMedicines } from "../services/medicine.service";
+import { getMedicineByName, getAllMedicines, getAllMedicinesNames, getMedicineByRegistryNumber } from "../services/medicine.service";
 
 export async function listMedicines(req: Request, res: Response) {
     try {
@@ -13,21 +13,40 @@ export async function listMedicines(req: Request, res: Response) {
 
 export async function searchMedicine(req: Request, res: Response) {
     try {
-        const name = req.query.name as string;
+        const { name, registryNumber } = req.query;
 
-        if (!name || !name.trim()) { // Evita nome vazio ou apenas espaços
-            return res.status(400).json({ message: "The 'name' parameter is required" });
+        if (registryNumber) {
+            const result = await getMedicineByRegistryNumber(registryNumber as string);
+            if (result.length === 0) {
+                return res.status(404).json({ message: "Nenhum medicamento encontrado para o número de registro fornecido." });
+            }
+            return res.json(result);
         }
 
-        const result = await getMedicineByName(name);
+        if (name) {
+            const result = await getMedicineByName(name as string);
+            if (result.length === 0) {
+                return res.status(404).json({ message: "Nenhum medicamento encontrado com o nome fornecido." });
+            }
+            return res.json(result);
+        }
+
+        return res.status(400).json({ message: "Parâmetro 'name' ou 'registryNumber' é necessário." });
         
-        if (result.length === 0) {
-            return res.status(404).json({ message: "No medicines found" });
-        }
-
-        res.json(result);
     } catch (error: any) {
-        console.error("Error searching medicine:", error);
-        res.status(500).json({ message: "Error searching medicine", error: error.message || error });
+        console.error("Erro ao buscar medicamento:", error);
+        res.status(500).json({ message: "Erro ao buscar medicamento", error: error.message || error });
     }
 }
+
+
+export async function listMedicinesNames(req: Request, res: Response) {
+    try {
+        const medicineNames = await getAllMedicinesNames();
+        res.json(medicineNames);
+    } catch (error: any) {
+        console.error("Error loading medicine names:", error);
+        res.status(500).json({ message: "Error loading medicine names", error: error.message || error });
+    }
+}
+

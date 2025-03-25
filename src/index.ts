@@ -14,7 +14,7 @@ const options = {
     openapi: "3.0.0",
     info: { title: "Medication API", version: "1.0.0" },
   },
-  apis: ["./src/routes/*.ts"], // Ajuste conforme sua estrutura de projeto
+  apis: ["./src/routes/*.ts"]
 };
 const specs = swaggerJsdoc(options);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
